@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Gymnastics Club Results - 3D Stacked Bar Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-style@0.5.0/dist/chartjs-plugin-style.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            box-sizing: border-box;
+            background-color: #666666;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #sidebar {
+            width: 250px;
+            max-width: 100%;
+            background: #f9f9f9;
+            padding: 15px;
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: clamp(16px, 4vw, 20px);
+            margin: 0 0 15px 0;
+        }
+
+        h2 {
+            font-size: clamp(14px, 3vw, 16px);
+            margin: 20px 0 10px 0;
+        }
+
+        .checkbox-label {
+            display: block;
+            margin: 8px 0;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+
+        #chartContainer {
+            flex: 1;
+            position: relative;
+            min-width: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+
+        #resultsChart {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
+            display: block;
+        }
+
+        #eventDropdown {
+            width: 100%;
+            margin: 5px 0;
+            padding: 5px;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+
+        #categoryDropdown, #clubDropdown {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            #sidebar {
+                width: 100%;
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+
+            #chartContainer {
+                width: 100%;
+                height: 60vh;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #sidebar {
+                padding: 10px;
+                max-height: 25vh;
+            }
+
+            #chartContainer {
+                padding: 5px;
+                height: calc(100vh - 25vh - 20px);
+                min-height: 300px;
+                overflow-y: auto;
+                -webkit-transform: translateZ(0);
+            }
+
+            .checkbox-label {
+                display: none;
+            }
+
+            h2 {
+                margin: 10px 0 5px 0;
+            }
+
+            #eventDropdown, #categoryDropdown, #clubDropdown {
+                display: block;
+                width: 100%;
+                margin: 5px 0;
+                padding: 5px;
+                font-size: clamp(12px, 2.5vw, 14px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h1>QLD SQIC-TC Interclub Results</h1>
+        <select id="eventDropdown" multiple onchange="updateChart()">
+            <option value="all" selected>All Events</option>
+            <option value="2025">Interclub #1, 2025</option>
+            <option value="2024">Interclub #4, 2024</option>
+            <option value="2024_2">Interclub #2, 2024</option>
+            <option value="2024_1">Interclub #1, 2024</option>
+        </select>
+        <h2>Categories</h2>
+        <label class="checkbox-label"><input type="checkbox" value="Overall" onchange="updateChart()"> Overall Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="TRP" onchange="updateChart()" checked> TRP Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="DMT" onchange="updateChart()" checked> DMT Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="TUM" onchange="updateChart()" checked> TUM Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 6" onchange="updateChart()"> Level 6 Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 5" onchange="updateChart()"> Level 5 Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 4A" onchange="updateChart()"> Level 4A Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 4" onchange="updateChart()"> Level 4 Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 3A" onchange="updateChart()"> Level 3A Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 3" onchange="updateChart()"> Level 3 Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 2A" onchange="updateChart()"> Level 2A Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 2" onchange="updateChart()"> Level 2 Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 2_8U" onchange="updateChart()"> Level 2_8U Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 1" onchange="updateChart()"> Level 1 Champion Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Level 1_8U" onchange="updateChart()"> Level 1_8U Champion Club</label>
+
+        <select id="categoryDropdown" multiple onchange="updateChart()">
+            <option value="Overall">Overall Champion Club</option>
+            <option value="TRP" selected>TRP Champion Club</option>
+            <option value="DMT" selected>DMT Champion Club</option>
+            <option value="TUM" selected>TUM Champion Club</option>
+            <option value="Level 6">Level 6 Champion Club</option>
+            <option value="Level 5">Level 5 Champion Club</option>
+            <option value="Level 4A">Level 4A Champion Club</option>
+            <option value="Level 4">Level 4 Champion Club</option>
+            <option value="Level 3A">Level 3A Champion Club</option>
+            <option value="Level 3">Level 3 Champion Club</option>
+            <option value="Level 2A">Level 2A Champion Club</option>
+            <option value="Level 2">Level 2 Champion Club</option>
+            <option value="Level 2_8U">Level 2_8U Champion Club</option>
+            <option value="Level 1">Level 1 Champion Club</option>
+            <option value="Level 1_8U">Level 1_8U Champion Club</option>
+        </select>
+
+        <h2>Clubs</h2>
+        <label class="checkbox-label"><input type="checkbox" value="All Clubs" onchange="updateAllClubsSelection(this)" id="allClubs" checked> All Clubs</label>
+        <label class="checkbox-label"><input type="checkbox" value="Robertson Gymnastics Club" onchange="updateClubSelection(this)"> Robertson Gymnastics Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="PCYC Queensland" onchange="updateClubSelection(this)"> PCYC Queensland</label>
+        <label class="checkbox-label"><input type="checkbox" value="Redland City Gymsports" onchange="updateClubSelection(this)"> Redland City Gymsports</label>
+        <label class="checkbox-label"><input type="checkbox" value="Skyline Gymnastics Academy" onchange="updateClubSelection(this)"> Skyline Gymnastics Academy</label>
+        <label class="checkbox-label"><input type="checkbox" value="Mitchelton Youth Club Inc" onchange="updateClubSelection(this)"> Mitchelton Youth Club Inc</label>
+        <label class="checkbox-label"><input type="checkbox" value="Sunshine Coast Gymnastics Academy Inc" onchange="updateClubSelection(this)"> Sunshine Coast Gymnastics Academy Inc</label>
+        <label class="checkbox-label"><input type="checkbox" value="Gold Coast Gymnastics" onchange="updateClubSelection(this)"> Gold Coast Gymnastics</label>
+        <label class="checkbox-label"><input type="checkbox" value="Scenic Rim Trampoline Gymnastics" onchange="updateClubSelection(this)"> Scenic Rim Trampoline Gymnastics</label>
+        <label class="checkbox-label"><input type="checkbox" value="Brisbane Team Gym & Tumble Club" onchange="updateClubSelection(this)"> Brisbane Team Gym & Tumble Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Gympie Gymnastics Club" onchange="updateClubSelection(this)"> Gympie Gymnastics Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Western Districts Youth Club" onchange="updateClubSelection(this)"> Western Districts Youth Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Caboolture PCYC" onchange="updateClubSelection(this)"> Caboolture PCYC</label>
+        <label class="checkbox-label"><input type="checkbox" value="Momentum Gymnastics Townsville" onchange="updateClubSelection(this)"> Momentum Gymnastics Townsville</label>
+        <label class="checkbox-label"><input type="checkbox" value="Y Gymnastics Queensland" onchange="updateClubSelection(this)"> Y Gymnastics Queensland</label>
+        <label class="checkbox-label"><input type="checkbox" value="Brisbane City Gymnastics Club" onchange="updateClubSelection(this)"> Brisbane City Gymnastics Club</label>
+        <label class="checkbox-label"><input type="checkbox" value="Skybound Gymnastics" onchange="updateClubSelection(this)"> Skybound Gymnastics</label>
+
+        <select id="clubDropdown" multiple onchange="updateChart()">
+            <option value="All Clubs" selected>All Clubs</option>
+            <option value="Robertson Gymnastics Club">Robertson Gymnastics Club</option>
+            <option value="PCYC Queensland">PCYC Queensland</option>
+            <option value="Redland City Gymsports">Redland City Gymsports</option>
+            <option value="Skyline Gymnastics Academy">Skyline Gymnastics Academy</option>
+            <option value="Mitchelton Youth Club Inc">Mitchelton Youth Club Inc</option>
+            <option value="Sunshine Coast Gymnastics Academy Inc">Sunshine Coast Gymnastics Academy Inc</option>
+            <option value="Gold Coast Gymnastics">Gold Coast Gymnastics</option>
+            <option value="Scenic Rim Trampoline Gymnastics">Scenic Rim Trampoline Gymnastics</option>
+            <option value="Brisbane Team Gym & Tumble Club">Brisbane Team Gym & Tumble Club</option>
+            <option value="Gympie Gymnastics Club">Gympie Gymnastics Club</option>
+            <option value="Western Districts Youth Club">Western Districts Youth Club</option>
+            <option value="Caboolture PCYC">Caboolture PCYC</option>
+            <option value="Momentum Gymnastics Townsville">Momentum Gymnastics Townsville</option>
+            <option value="Y Gymnastics Queensland">Y Gymnastics Queensland</option>
+            <option value="Brisbane City Gymnastics Club">Brisbane City Gymnastics Club</option>
+            <option value="Skybound Gymnastics">Skybound Gymnastics</option>
+        </select>
+    </div>
+    <div id="chartContainer">
+        <canvas id="resultsChart"></canvas>
+    </div>
+
+    <script>
+        const data = {
+            "2025": {
+                "Overall": {
+                    "Robertson Gymnastics Club": 383,
+                    "PCYC Queensland": 267,
+                    "Redland City Gymsports": 212,
+                    "Skyline Gymnastics Academy": 144,
+                    "Mitchelton Youth Club Inc": 121,
+                    "Sunshine Coast Gymnastics Academy Inc": 64,
+                    "Gold Coast Gymnastics": 53,
+                    "Scenic Rim Trampoline Gymnastics": 52,
+                    "Brisbane Team Gym & Tumble Club": 29,
+                    "Gympie Gymnastics Club": 25,
+                    "Western Districts Youth Club": 14
+                },
+                "TRP": {
+                    "Robertson Gymnastics Club": 126,
+                    "Redland City Gymsports": 112,
+                    "PCYC Queensland": 106,
+                    "Skyline Gymnastics Academy": 43,
+                    "Sunshine Coast Gymnastics Academy Inc": 40,
+                    "Mitchelton Youth Club Inc": 38,
+                    "Scenic Rim Trampoline Gymnastics": 23,
+                    "Gympie Gymnastics Club": 11
+                },
+                "DMT": {
+                    "Robertson Gymnastics Club": 129,
+                    "PCYC Queensland": 107,
+                    "Redland City Gymsports": 83,
+                    "Mitchelton Youth Club Inc": 46,
+                    "Skyline Gymnastics Academy": 32,
+                    "Sunshine Coast Gymnastics Academy Inc": 21,
+                    "Scenic Rim Trampoline Gymnastics": 16,
+                    "Gympie Gymnastics Club": 8
+                },
+                "TUM": {
+                    "Robertson Gymnastics Club": 128,
+                    "Skyline Gymnastics Academy": 69,
+                    "PCYC Queensland": 53,
+                    "Gold Coast Gymnastics": 53,
+                    "Mitchelton Youth Club Inc": 37,
+                    "Brisbane Team Gym & Tumble Club": 29,
+                    "Redland City Gymsports": 15,
+                    "Western Districts Youth Club": 14,
+                    "Scenic Rim Trampoline Gymnastics": 13,
+                    "Gympie Gymnastics Club": 6,
+                    "Sunshine Coast Gymnastics Academy Inc": 3
+                },
+                "Level 6": {
+                    "Robertson Gymnastics Club": 50,
+                    "PCYC Queensland": 19,
+                    "Skyline Gymnastics Academy": 8,
+                    "Redland City Gymsports": 5
+                },
+                "Level 5": {
+                    "Robertson Gymnastics Club": 44,
+                    "PCYC Queensland": 38,
+                    "Skyline Gymnastics Academy": 18,
+                    "Gympie Gymnastics Club": 15,
+                    "Redland City Gymsports": 11,
+                    "Scenic Rim Trampoline Gymnastics": 10,
+                    "Western Districts Youth Club": 10
+                },
+                "Level 4A": {
+                    "Robertson Gymnastics Club": 35,
+                    "Skyline Gymnastics Academy": 31,
+                    "Redland City Gymsports": 20,
+                    "PCYC Queensland": 19,
+                    "Scenic Rim Trampoline Gymnastics": 8
+                },
+                "Level 4": {
+                    "Robertson Gymnastics Club": 45,
+                    "PCYC Queensland": 31,
+                    "Redland City Gymsports": 29,
+                    "Sunshine Coast Gymnastics Academy Inc": 28,
+                    "Skyline Gymnastics Academy": 20,
+                    "Gold Coast Gymnastics": 16,
+                    "Western Districts Youth Club": 4,
+                    "Brisbane Team Gym & Tumble Club": 3
+                },
+                "Level 3A": {
+                    "PCYC Queensland": 46,
+                    "Robertson Gymnastics Club": 43,
+                    "Mitchelton Youth Club Inc": 22,
+                    "Gold Coast Gymnastics": 10,
+                    "Redland City Gymsports": 9,
+                    "Brisbane Team Gym & Tumble Club": 8
+                },
+                "Level 3": {
+                    "Robertson Gymnastics Club": 49,
+                    "Redland City Gymsports": 30,
+                    "PCYC Queensland": 29,
+                    "Skyline Gymnastics Academy": 23,
+                    "Mitchelton Youth Club Inc": 12,
+                    "Gympie Gymnastics Club": 10,
+                    "Gold Coast Gymnastics": 10,
+                    "Sunshine Coast Gymnastics Academy Inc": 9
+                },
+                "Level 2A": {
+                    "Robertson Gymnastics Club": 50,
+                    "PCYC Queensland": 32,
+                    "Redland City Gymsports": 29,
+                    "Skyline Gymnastics Academy": 19,
+                    "Brisbane Team Gym & Tumble Club": 10,
+                    "Mitchelton Youth Club Inc": 3
+                },
+                "Level 2": {
+                    "Robertson Gymnastics Club": 48,
+                    "Redland City Gymsports": 22,
+                    "Scenic Rim Trampoline Gymnastics": 19,
+                    "PCYC Queensland": 17,
+                    "Mitchelton Youth Club Inc": 10,
+                    "Skyline Gymnastics Academy": 9,
+                    "Sunshine Coast Gymnastics Academy Inc": 8,
+                    "Gold Coast Gymnastics": 7
+                },
+                "Level 2_8U": {
+                    "Mitchelton Youth Club Inc": 37,
+                    "Robertson Gymnastics Club": 24,
+                    "PCYC Queensland": 15,
+                    "Gold Coast Gymnastics": 10,
+                    "Brisbane Team Gym & Tumble Club": 8
+                },
+                "Level 1": {
+                    "Robertson Gymnastics Club": 50,
+                    "Redland City Gymsports": 42,
+                    "Sunshine Coast Gymnastics Academy Inc": 19
+                },
+                "Level 1_8U": {
+                    "Mitchelton Youth Club Inc": 37,
+                    "Robertson Gymnastics Club": 30,
+                    "PCYC Queensland": 21,
+                    "Skyline Gymnastics Academy": 16,
+                    "Scenic Rim Trampoline Gymnastics": 15,
+                    "Redland City Gymsports": 15
+                }
+            },
+            "2024": {
+                "Overall": {
+                    "Robertson Gymnastics Club": 382,
+                    "Redland City Gymsports": 282,
+                    "Mitchelton Youth Club Inc": 168,
+                    "Skyline Gymnastics Academy": 143,
+                    "PCYC Queensland": 127,
+                    "Caboolture PCYC": 117,
+                    "Sunshine Coast Gymnastics Academy Inc": 38,
+                    "Gold Coast Gymnastics": 38,
+                    "Western Districts Youth Club": 23,
+                    "Gympie Gymnastics Club": 20,
+                    "Momentum Gymnastics Townsville": 10,
+                    "Brisbane Team Gym & Tumble Club": 6
+                },
+                "TRP": {
+                    "Robertson Gymnastics Club": 125,
+                    "Redland City Gymsports": 117,
+                    "Mitchelton Youth Club Inc": 58,
+                    "Skyline Gymnastics Academy": 55,
+                    "PCYC Queensland": 51,
+                    "Caboolture PCYC": 44,
+                    "Sunshine Coast Gymnastics Academy Inc": 16,
+                    "Momentum Gymnastics Townsville": 3
+                },
+                "DMT": {
+                    "Robertson Gymnastics Club": 129,
+                    "Redland City Gymsports": 108,
+                    "Mitchelton Youth Club Inc": 59,
+                    "Caboolture PCYC": 51,
+                    "PCYC Queensland": 43,
+                    "Skyline Gymnastics Academy": 42,
+                    "Sunshine Coast Gymnastics Academy Inc": 10,
+                    "Gympie Gymnastics Club": 10,
+                    "Momentum Gymnastics Townsville": 1
+                },
+                "TUM": {
+                    "Robertson Gymnastics Club": 128,
+                    "Mitchelton Youth Club Inc": 51,
+                    "Skyline Gymnastics Academy": 46,
+                    "Gold Coast Gymnastics": 38,
+                    "PCYC Queensland": 33,
+                    "Redland City Gymsports": 25,
+                    "Western Districts Youth Club": 23,
+                    "Caboolture PCYC": 22,
+                    "Sunshine Coast Gymnastics Academy Inc": 12,
+                    "Gympie Gymnastics Club": 10,
+                    "Momentum Gymnastics Townsville": 6,
+                    "Brisbane Team Gym & Tumble Club": 6
+                },
+                "Level 6": {
+                    "Robertson Gymnastics Club": 40,
+                    "Redland City Gymsports": 34,
+                    "Skyline Gymnastics Academy": 6
+                },
+                "Level 5": {
+                    "Robertson Gymnastics Club": 49,
+                    "PCYC Queensland": 26,
+                    "Redland City Gymsports": 23,
+                    "Skyline Gymnastics Academy": 18,
+                    "Western Districts Youth Club": 9
+                },
+                "Level 4A": {
+                    "Robertson Gymnastics Club": 29,
+                    "Gympie Gymnastics Club": 20,
+                    "Redland City Gymsports": 18,
+                    "Mitchelton Youth Club Inc": 7
+                },
+                "Level 4": {
+                    "Robertson Gymnastics Club": 45,
+                    "Caboolture PCYC": 20,
+                    "Skyline Gymnastics Academy": 19,
+                    "Gold Coast Gymnastics": 11,
+                    "PCYC Queensland": 9,
+                    "Redland City Gymsports": 7,
+                    "Western Districts Youth Club": 4
+                },
+                "Level 3A": {
+                    "Robertson Gymnastics Club": 29,
+                    "Caboolture PCYC": 29,
+                    "Redland City Gymsports": 28,
+                    "PCYC Queensland": 16,
+                    "Mitchelton Youth Club Inc": 14,
+                    "Skyline Gymnastics Academy": 14,
+                    "Gold Coast Gymnastics": 9,
+                    "Brisbane Team Gym & Tumble Club": 6,
+                    "Momentum Gymnastics Townsville": 4
+                },
+                "Level 3": {
+                    "Robertson Gymnastics Club": 46,
+                    "PCYC Queensland": 46,
+                    "Mitchelton Youth Club Inc": 33,
+                    "Redland City Gymsports": 25,
+                    "Caboolture PCYC": 22,
+                    "Skyline Gymnastics Academy": 9
+                },
+                "Level 2A": {
+                    "Robertson Gymnastics Club": 46,
+                    "Redland City Gymsports": 33,
+                    "Sunshine Coast Gymnastics Academy Inc": 28,
+                    "Caboolture PCYC": 22,
+                    "Western Districts Youth Club": 10,
+                    "Mitchelton Youth Club Inc": 9,
+                    "Momentum Gymnastics Townsville": 6,
+                    "Skyline Gymnastics Academy": 5
+                },
+                "Level 2": {
+                    "Robertson Gymnastics Club": 49,
+                    "Redland City Gymsports": 35,
+                    "Mitchelton Youth Club Inc": 29,
+                    "PCYC Queensland": 10,
+                    "Gold Coast Gymnastics": 9,
+                    "Caboolture PCYC": 6,
+                    "Skyline Gymnastics Academy": 2
+                },
+                "Level 2_8U": {
+                    "Skyline Gymnastics Academy": 41,
+                    "Robertson Gymnastics Club": 29,
+                    "Mitchelton Youth Club Inc": 20,
+                    "Gold Coast Gymnastics": 9
+                },
+                "Level 1": {
+                    "Redland City Gymsports": 46,
+                    "Robertson Gymnastics Club": 39,
+                    "Sunshine Coast Gymnastics Academy Inc": 10,
+                    "Mitchelton Youth Club Inc": 10,
+                    "Skyline Gymnastics Academy": 2,
+                    "PCYC Queensland": 2
+                },
+                "Level 1_8U": {
+                    "Mitchelton Youth Club Inc": 41,
+                    "Robertson Gymnastics Club": 29,
+                    "Redland City Gymsports": 28,
+                    "Skyline Gymnastics Academy": 27,
+                    "Caboolture PCYC": 18,
+                    "PCYC Queensland": 14
+                }
+            },
+            "2024_2": {
+                "Overall": {
+                    "Robertson Gymnastics Club": 386,
+                    "Redland City Gymsports": 240,
+                    "PCYC Queensland": 170,
+                    "Mitchelton Youth Club Inc": 168,
+                    "Skyline Gymnastics Academy": 110,
+                    "Skybound Gymnastics": 56,
+                    "Brisbane City Gymnastics Club": 50,
+                    "Caboolture PCYC": 48,
+                    "Sunshine Coast Gymnastics Academy Inc": 42,
+                    "Gympie Gymnastics Club": 29,
+                    "Western Districts Youth Club": 27,
+                    "Gold Coast Gymnastics": 18,
+                    "Brisbane Team Gym & Tumble Club": 8
+                },
+                "TRP": {
+                    "Robertson Gymnastics Club": 126,
+                    "Redland City Gymsports": 114,
+                    "Mitchelton Youth Club Inc": 78,
+                    "PCYC Queensland": 66,
+                    "Skyline Gymnastics Academy": 41,
+                    "Caboolture PCYC": 24,
+                    "Brisbane City Gymnastics Club": 20,
+                    "Sunshine Coast Gymnastics Academy Inc": 18,
+                    "Gympie Gymnastics Club": 15
+                },
+                "DMT": {
+                    "Robertson Gymnastics Club": 130,
+                    "Redland City Gymsports": 91,
+                    "PCYC Queensland": 77,
+                    "Mitchelton Youth Club Inc": 61,
+                    "Skyline Gymnastics Academy": 31,
+                    "Brisbane City Gymnastics Club": 27,
+                    "Skybound Gymnastics": 26,
+                    "Sunshine Coast Gymnastics Academy Inc": 18,
+                    "Gympie Gymnastics Club": 14,
+                    "Caboolture PCYC": 10
+                },
+                "TUM": {
+                    "Robertson Gymnastics Club": 128,
+                    "Skyline Gymnastics Academy": 38,
+                    "Redland City Gymsports": 30,
+                    "Skybound Gymnastics": 30,
+                    "Mitchelton Youth Club Inc": 29,
+                    "Western Districts Youth Club": 27,
+                    "PCYC Queensland": 27,
+                    "Gold Coast Gymnastics": 18,
+                    "Caboolture PCYC": 14,
+                    "Brisbane Team Gym & Tumble Club": 8,
+                    "Sunshine Coast Gymnastics Academy Inc": 6,
+                    "Brisbane City Gymnastics Club": 3
+                },
+                "Level 6": {
+                    "Robertson Gymnastics Club": 40,
+                    "Redland City Gymsports": 13
+                },
+                "Level 5": {
+                    "Robertson Gymnastics Club": 47,
+                    "Skybound Gymnastics": 38,
+                    "PCYC Queensland": 30,
+                    "Redland City Gymsports": 21,
+                    "Western Districts Youth Club": 6,
+                    "Skyline Gymnastics Academy": 1
+                },
+                "Level 4A": {
+                    "Mitchelton Youth Club Inc": 36,
+                    "Robertson Gymnastics Club": 20,
+                    "Redland City Gymsports": 17,
+                    "Skyline Gymnastics Academy": 8
+                },
+                "Level 4": {
+                    "Robertson Gymnastics Club": 42,
+                    "Sunshine Coast Gymnastics Academy Inc": 22,
+                    "PCYC Queensland": 21,
+                    "Gympie Gymnastics Club": 20,
+                    "Redland City Gymsports": 19,
+                    "Skybound Gymnastics": 18,
+                    "Skyline Gymnastics Academy": 5,
+                    "Gold Coast Gymnastics": 3,
+                    "Western Districts Youth Club": 2
+                },
+                "Level 3A": {
+                    "Redland City Gymsports": 24,
+                    "Robertson Gymnastics Club": 24,
+                    "Brisbane City Gymnastics Club": 23,
+                    "Mitchelton Youth Club Inc": 19,
+                    "PCYC Queensland": 16,
+                    "Western Districts Youth Club": 10,
+                    "Caboolture PCYC": 9,
+                    "Skyline Gymnastics Academy": 7
+                },
+                "Level 3": {
+                    "Robertson Gymnastics Club": 39,
+                    "PCYC Queensland": 27,
+                    "Redland City Gymsports": 24,
+                    "Caboolture PCYC": 19,
+                    "Mitchelton Youth Club Inc": 18,
+                    "Western Districts Youth Club": 9,
+                    "Gympie Gymnastics Club": 8,
+                    "Gold Coast Gymnastics": 7,
+                    "Skyline Gymnastics Academy": 5
+                },
+                "Level 2A": {
+                    "Robertson Gymnastics Club": 50,
+                    "Redland City Gymsports": 21,
+                    "Sunshine Coast Gymnastics Academy Inc": 20,
+                    "Mitchelton Youth Club Inc": 19,
+                    "Caboolture PCYC": 13,
+                    "Skyline Gymnastics Academy": 9,
+                    "PCYC Queensland": 5,
+                    "Gympie Gymnastics Club": 1
+                },
+                "Level 2": {
+                    "Robertson Gymnastics Club": 47,
+                    "Redland City Gymsports": 43,
+                    "PCYC Queensland": 20,
+                    "Brisbane City Gymnastics Club": 9,
+                    "Mitchelton Youth Club Inc": 3,
+                    "Brisbane Team Gym & Tumble Club": 1
+                },
+                "Level 2_8U": {
+                    "Skyline Gymnastics Academy": 47,
+                    "Robertson Gymnastics Club": 30,
+                    "PCYC Queensland": 19,
+                    "Mitchelton Youth Club Inc": 13,
+                    "Gold Coast Gymnastics": 8,
+                    "Redland City Gymsports": 7,
+                    "Brisbane Team Gym & Tumble Club": 7,
+                    "Brisbane City Gymnastics Club": 6
+                },
+                "Level 1": {
+                    "Robertson Gymnastics Club": 49,
+                    "Redland City Gymsports": 35,
+                    "Mitchelton Youth Club Inc": 10
+                },
+                "Level 1_8U": {
+                    "Robertson Gymnastics Club": 47,
+                    "Mitchelton Youth Club Inc": 43,
+                    "PCYC Queensland": 32,
+                    "Skyline Gymnastics Academy": 22,
+                    "Redland City Gymsports": 16,
+                    "Brisbane City Gymnastics Club": 12,
+                    "Caboolture PCYC": 7
+                }
+            },
+            "2024_1": {
+                "Overall": {
+                    "Robertson Gymnastics Club": 370,
+                    "PCYC Queensland": 221,
+                    "Redland City Gymsports": 190,
+                    "Mitchelton Youth Club Inc": 150,
+                    "Skyline Gymnastics Academy": 113,
+                    "Sunshine Coast Gymnastics Academy Inc": 93,
+                    "Caboolture PCYC": 89,
+                    "Gympie Gymnastics Club": 42,
+                    "Gold Coast Gymnastics": 37,
+                    "Western Districts Youth Club": 11,
+                    "Y Gymnastics Queensland": 10,
+                    "Brisbane City Gymnastics Club": 2
+                },
+                "TRP": {
+                    "Robertson Gymnastics Club": 123,
+                    "PCYC Queensland": 101,
+                    "Redland City Gymsports": 92,
+                    "Mitchelton Youth Club Inc": 57,
+                    "Skyline Gymnastics Academy": 45,
+                    "Sunshine Coast Gymnastics Academy Inc": 41,
+                    "Caboolture PCYC": 25,
+                    "Gympie Gymnastics Club": 14,
+                    "Brisbane City Gymnastics Club": 2
+                },
+                "DMT": {
+                    "Robertson Gymnastics Club": 119,
+                    "PCYC Queensland": 97,
+                    "Redland City Gymsports": 76,
+                    "Mitchelton Youth Club Inc": 62,
+                    "Sunshine Coast Gymnastics Academy Inc": 43,
+                    "Caboolture PCYC": 35,
+                    "Skyline Gymnastics Academy": 31,
+                    "Gympie Gymnastics Club": 20
+                },
+                "TUM": {
+                    "Robertson Gymnastics Club": 128,
+                    "Skyline Gymnastics Academy": 37,
+                    "Gold Coast Gymnastics": 37,
+                    "Mitchelton Youth Club Inc": 31,
+                    "Caboolture PCYC": 29,
+                    "Redland City Gymsports": 22,
+                    "PCYC Queensland": 17,
+                    "Western Districts Youth Club": 11,
+                    "Y Gymnastics Queensland": 10,
+                    "Sunshine Coast Gymnastics Academy Inc": 9,
+                    "Gympie Gymnastics Club": 8
+                },
+                "Level 6": {
+                    "Redland City Gymsports": 38,
+                    "Robertson Gymnastics Club": 32,
+                    "PCYC Queensland": 20,
+                    "Caboolture PCYC": 16,
+                    "Skyline Gymnastics Academy": 10
+                },
+                "Level 5": {
+                    "PCYC Queensland": 40,
+                    "Robertson Gymnastics Club": 34,
+                    "Skyline Gymnastics Academy": 17,
+                    "Redland City Gymsports": 15,
+                    "Caboolture PCYC": 10
+                },
+                "Level 4A": {
+                    "Robertson Gymnastics Club": 30,
+                    "Mitchelton Youth Club Inc": 26,
+                    "PCYC Queensland": 7
+                },
+                "Level 4": {
+                    "Robertson Gymnastics Club": 44,
+                    "Sunshine Coast Gymnastics Academy Inc": 33,
+                    "PCYC Queensland": 24,
+                    "Redland City Gymsports": 23,
+                    "Skyline Gymnastics Academy": 19,
+                    "Caboolture PCYC": 16,
+                    "Gold Coast Gymnastics": 9,
+                    "Western Districts Youth Club": 4
+                },
+                "Level 3A": {
+                    "Robertson Gymnastics Club": 48,
+                    "Skyline Gymnastics Academy": 27,
+                    "Mitchelton Youth Club Inc": 22,
+                    "Redland City Gymsports": 19,
+                    "Caboolture PCYC": 15,
+                    "Gold Coast Gymnastics": 8,
+                    "PCYC Queensland": 7
+                },
+                "Level 3": {
+                    "Robertson Gymnastics Club": 37,
+                    "Sunshine Coast Gymnastics Academy Inc": 36,
+                    "Gympie Gymnastics Club": 25,
+                    "Redland City Gymsports": 24,
+                    "Mitchelton Youth Club Inc": 19,
+                    "PCYC Queensland": 15,
+                    "Skyline Gymnastics Academy": 11,
+                    "Gold Coast Gymnastics": 10,
+                    "Western Districts Youth Club": 7
+                },
+                "Level 2A": {
+                    "Robertson Gymnastics Club": 49,
+                    "Mitchelton Youth Club Inc": 26,
+                    "Redland City Gymsports": 22,
+                    "PCYC Queensland": 19,
+                    "Caboolture PCYC": 14,
+                    "Skyline Gymnastics Academy": 3
+                },
+                "Level 2": {
+                    "Robertson Gymnastics Club": 44,
+                    "Redland City Gymsports": 25,
+                    "Sunshine Coast Gymnastics Academy Inc": 24,
+                    "PCYC Queensland": 23,
+                    "Gympie Gymnastics Club": 17,
+                    "Mitchelton Youth Club Inc": 10,
+                    "Gold Coast Gymnastics": 10,
+                    "Y Gymnastics Queensland": 10,
+                    "Brisbane City Gymnastics Club": 2
+                },
+                "Level 2_8U": {
+                    "Mitchelton Youth Club Inc": 27,
+                    "PCYC Queensland": 20,
+                    "Skyline Gymnastics Academy": 18
+                },
+                "Level 1": {
+                    "Robertson Gymnastics Club": 47,
+                    "Redland City Gymsports": 20,
+                    "PCYC Queensland": 8,
+                    "Mitchelton Youth Club Inc": 4
+                },
+                "Level 1_8U": {
+                    "PCYC Queensland": 38,
+                    "Robertson Gymnastics Club": 30,
+                    "Caboolture PCYC": 18,
+                    "Mitchelton Youth Club Inc": 16,
+                    "Skyline Gymnastics Academy": 8,
+                    "Redland City Gymsports": 4
+                }
+            }
+        };
+
+        const categoryOrder = [
+            "Overall", "TRP", "DMT", "TUM", "Level 6", "Level 5", "Level 4A", "Level 4",
+            "Level 3A", "Level 3", "Level 2A", "Level 2", "Level 2_8U", "Level 1", "Level 1_8U"
+        ];
+
+        const eventOrder = ["2025", "2024", "2024_2", "2024_1"]; // Chronological order: 2025, 2024 #4, 2024 #2, 2024 #1
+        const eventLabels = {
+            "2025": "Interclub #1, 2025",
+            "2024": "Interclub #4, 2024",
+            "2024_2": "Interclub #2, 2024",
+            "2024_1": "Interclub #1, 2024"
+        };
+
+        let chart = null;
+
+        function updateAllClubsSelection(checkbox) {
+            const specificClubs = document.querySelectorAll('#sidebar input[type="checkbox"]:not([value^="Level"]):not([value="All Clubs"]):not([value="Overall"]):not([value="TRP"]):not([value="DMT"]):not([value="TUM"])');
+            if (checkbox.checked) {
+                specificClubs.forEach(cb => cb.checked = false);
+            }
+            updateChart();
+        }
+
+        function updateClubSelection(checkbox) {
+            const allClubsCheckbox = document.getElementById('allClubs');
+            const specificClubs = document.querySelectorAll('#sidebar input[type="checkbox"]:not([value^="Level"]):not([value="All Clubs"]):not([value="Overall"]):not([value="TRP"]):not([value="DMT"]):not([value="TUM"])');
+            const selectedSpecificClubs = Array.from(specificClubs).filter(cb => cb.checked);
+
+            if (selectedSpecificClubs.length > 0) {
+                allClubsCheckbox.checked = false;
+            }
+            updateChart();
+        }
+
+        function updateChart() {
+            const isSmallScreen = window.matchMedia('(max-width: 480px)').matches;
+            const eventDropdown = document.getElementById('eventDropdown');
+            const selectedEventOptions = Array.from(eventDropdown.selectedOptions).map(option => option.value);
+            const selectedEvents = selectedEventOptions.includes('all') ? eventOrder : selectedEventOptions;
+
+            let selectedCategories, selectedClubs, allClubsSelected;
+            if (isSmallScreen) {
+                const categoryDropdown = document.getElementById('categoryDropdown');
+                const clubDropdown = document.getElementById('clubDropdown');
+                selectedCategories = Array.from(categoryDropdown.selectedOptions).map(option => option.value);
+                selectedClubs = Array.from(clubDropdown.selectedOptions).map(option => option.value);
+                allClubsSelected = selectedClubs.includes('All Clubs');
+            } else {
+                const categoryCheckboxes = document.querySelectorAll('#sidebar input[type="checkbox"][value="Overall"], #sidebar input[type="checkbox"][value="TRP"], #sidebar input[type="checkbox"][value="DMT"], #sidebar input[type="checkbox"][value="TUM"], #sidebar input[type="checkbox"][value^="Level"]');
+                const clubCheckboxes = document.querySelectorAll('#sidebar input[type="checkbox"]:not([value^="Level"]):not([value="All Clubs"]):not([value="Overall"]):not([value="TRP"]):not([value="DMT"]):not([value="TUM"])');
+                const allClubsCheckbox = document.getElementById('allClubs');
+                selectedCategories = Array.from(categoryCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+                selectedClubs = Array.from(clubCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+                allClubsSelected = allClubsCheckbox.checked;
+            }
+
+            const eventsToShow = selectedEvents.slice(); // Already in desired order
+            const clubTotals = {};
+
+            eventsToShow.forEach(event => {
+                selectedCategories.forEach(category => {
+                    if (data[event] && data[event][category]) {
+                        Object.keys(data[event][category]).forEach(club => {
+                            if (!clubTotals[club]) clubTotals[club] = {};
+                            if (!clubTotals[club][event]) clubTotals[club][event] = {};
+                            clubTotals[club][event][category] = data[event][category][club] || 0;
+                        });
+                    }
+                });
+            });
+
+            let filteredClubTotals = {};
+            if (allClubsSelected && Object.keys(clubTotals).length > 0) {
+                filteredClubTotals = { ...clubTotals };
+            } else if (selectedClubs.length > 0 && !allClubsSelected) {
+                filteredClubTotals = Object.fromEntries(
+                    Object.entries(clubTotals).filter(([club]) => selectedClubs.includes(club))
+                );
+            }
+
+            const clubList = Object.keys(filteredClubTotals).map(club => ({
+                name: club,
+                total: eventsToShow.reduce((sum, event) => {
+                    return sum + (filteredClubTotals[club][event] ? Object.values(filteredClubTotals[club][event]).reduce((s, v) => s + v, 0) : 0);
+                }, 0)
+            })).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+
+            const labels = [];
+            const clubEventMap = new Map();
+            clubList.forEach(club => {
+                eventsToShow.forEach(event => {
+                    if (filteredClubTotals[club.name][event]) {
+                        const label = `${club.name} ${eventLabels[event]}`;
+                        labels.push(label);
+                        clubEventMap.set(label, { club: club.name, event });
+                    }
+                });
+            });
+
+            const datasets = selectedCategories.map((category, index) => {
+                const points = labels.map(label => {
+                    const { club, event } = clubEventMap.get(label);
+                    return filteredClubTotals[club][event][category] || 0;
+                });
+                const hue = (categoryOrder.indexOf(category) * 137.508) % 360;
+                return {
+                    label: category,
+                    data: points,
+                    backgroundColor: points.map((value, i) => {
+                        const { event } = clubEventMap.get(labels[i]);
+                        const lightness = event === "2025" ? 50 : event === "2024" ? 40 : event === "2024_2" ? 45 : 35;
+                        return `hsl(${hue}, 70%, ${lightness}%)`;
+                    }),
+                    stack: 'Stack',
+                    shadowOffsetX: 5,
+                    shadowOffsetY: 5,
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)',
+                    bevelEnabled: true,
+                    bevelHighlightColor: 'rgba(255, 255, 255, 0.75)',
+                    bevelShadowColor: 'rgba(0, 0, 0, 0.5)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(0, 0, 0, 0.8)',
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9
+                };
+            });
+
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            const canvas = document.getElementById('resultsChart');
+            const container = document.getElementById('chartContainer');
+
+            const setCanvasSize = () => {
+                const width = container.clientWidth - 40;
+                const height = container.clientHeight - 40;
+                canvas.width = width;
+                canvas.height = height;
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                console.log(`Canvas size set to ${width}x${height}`);
+            };
+
+            setCanvasSize();
+
+            if (chart) {
+                chart.destroy();
+                console.log('Previous chart destroyed');
+            }
+
+            const chartType = 'bar';
+            const indexAxis = isSmallScreen ? 'y' : 'x';
+
+            if (labels.length > 0 && datasets.length > 0) {
+                console.log('Creating chart with:', { labels, datasets, indexAxis, canvasWidth: canvas.width, canvasHeight: canvas.height });
+                chart = new Chart(ctx, {
+                    type: chartType,
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        indexAxis: indexAxis,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Club Results for ${selectedCategories.join(', ')} (${selectedEvents.length === eventOrder.length ? 'All Events' : selectedEvents.map(e => eventLabels[e]).join(', ')})`,
+                                font: { size: 18 }
+                            },
+                            legend: {
+                                display: true,
+                                position: isSmallScreen ? 'bottom' : 'top',
+                                labels: { font: { size: 12 } }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: isSmallScreen ? 'Total Points' : 'Clubs and Events',
+                                    font: { size: 14 }
+                                },
+                                ticks: {
+                                    font: { size: 12 },
+                                    autoSkip: !isSmallScreen,
+                                    maxRotation: isSmallScreen ? 0 : 45,
+                                    minRotation: 0
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: isSmallScreen ? 'Clubs and Events' : 'Total Points',
+                                    font: { size: 14 }
+                                },
+                                ticks: {
+                                    font: { size: 12 },
+                                    autoSkip: isSmallScreen
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                bottom: isSmallScreen ? 40 : 20,
+                                left: 10,
+                                right: 10,
+                                top: 10
+                            }
+                        },
+                        animation: {
+                            onComplete: () => {
+                                console.log('Chart animation complete');
+                                if (chart) {
+                                    chart.resize();
+                                    console.log('Chart resized after animation');
+                                }
+                            }
+                        }
+                    }
+                });
+
+                setTimeout(() => {
+                    if (chart) {
+                        setCanvasSize();
+                        chart.resize();
+                        console.log('Chart resized for iPhone after 500ms delay');
+                    }
+                }, 500);
+            } else {
+                console.log('No data to display');
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'black';
+                ctx.textAlign = 'center';
+                ctx.fillText('Please select at least one category and club', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            console.log('Window loaded, rendering chart');
+            updateChart();
+        });
+
+        window.addEventListener('resize', () => {
+            console.log('Window resized');
+            if (chart) {
+                chart.destroy();
+                updateChart();
+            }
+        });
+
+        window.addEventListener('orientationchange', () => {
+            console.log('Orientation changed');
+            setTimeout(() => {
+                if (chart) {
+                    chart.destroy();
+                    updateChart();
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
